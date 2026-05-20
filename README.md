@@ -24,9 +24,9 @@ That's it. Two commands:
 
 1. Copies skill files to `.claude/skills/` and `.agents/skills/`
 2. Detects which agents are configured in your project
-3. Injects the always-active snippet into each agent's config file
+3. Injects the always-active snippet into each agent's config file (`CLAUDE.md`, `codex.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`, `.opencode/instructions.md`)
 4. Creates the `.ai/` directory structure
-5. For Claude and Codex, creates config files if they don't exist yet
+5. For Claude and Codex, creates config files if they don't exist; for all others (including `AGENTS.md`), injects only if the file already exists
 
 Safe to re-run — skips files already injected, never overwrites existing content.
 
@@ -106,6 +106,7 @@ Agent Handoff fixes this with a shared `.ai/` directory in your project:
 |-------|------------|----------------------------|
 | Claude Code | `CLAUDE.md` | Always (created if missing) |
 | Codex (OpenAI) | `codex.md` | Always (created if missing) |
+| Multi-agent | `AGENTS.md` | If file exists |
 | Cursor | `.cursorrules` | If file or `.cursor/` dir exists |
 | Windsurf | `.windsurfrules` | If file exists |
 | Gemini CLI | `GEMINI.md` | If file exists |

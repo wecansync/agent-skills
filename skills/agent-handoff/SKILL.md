@@ -140,6 +140,7 @@ If already present, skip it.
 |-------|------------|----------------|
 | Claude Code | `CLAUDE.md` | Always — create the file if it doesn't exist |
 | Codex (OpenAI) | `codex.md` | Always — create the file if it doesn't exist |
+| Multi-agent | `AGENTS.md` | Only if the file exists |
 | Cursor | `.cursorrules` | Only if the file or `.cursor/` directory exists |
 | Windsurf | `.windsurfrules` | Only if the file exists |
 | Gemini CLI | `GEMINI.md` | Only if the file exists |

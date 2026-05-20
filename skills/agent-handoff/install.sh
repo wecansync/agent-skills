@@ -220,17 +220,12 @@ else
 fi
 
 # Codex (OpenAI)
-if [[ -f "$PROJECT_DIR/codex.md" ]] || [[ -f "$PROJECT_DIR/AGENTS.md" ]]; then
-  if [[ -f "$PROJECT_DIR/AGENTS.md" ]]; then
-    inject_into_file "$PROJECT_DIR/AGENTS.md" "AGENTS.md (Codex/multi-agent)"
-    INJECTED=$((INJECTED + 1))
-  fi
-  if [[ -f "$PROJECT_DIR/codex.md" ]]; then
-    inject_into_file "$PROJECT_DIR/codex.md" "codex.md (Codex)"
-    INJECTED=$((INJECTED + 1))
-  fi
-else
-  inject_into_file "$PROJECT_DIR/codex.md" "codex.md (Codex)"
+inject_into_file "$PROJECT_DIR/codex.md" "codex.md (Codex)"
+INJECTED=$((INJECTED + 1))
+
+# AGENTS.md (multi-agent — used by Codex, Specify, and other multi-agent tools)
+if [[ -f "$PROJECT_DIR/AGENTS.md" ]]; then
+  inject_into_file "$PROJECT_DIR/AGENTS.md" "AGENTS.md (multi-agent)"
   INJECTED=$((INJECTED + 1))
 fi
 
