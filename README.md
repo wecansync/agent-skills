@@ -1,7 +1,5 @@
 # Agent Skills
 
-[![skills.sh](https://skills.sh/b/wecansync/agent-skills)](https://skills.sh/wecansync/agent-skills)
-
 Open agent skills for multi-agent development workflows. Built for real teams that use multiple AI agents (Claude, OpenCode, Codex, Gemini, Kilo, Antigravity, etc.) on the same codebase.
 
 ## Quick Install
