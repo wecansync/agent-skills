@@ -1,0 +1,6 @@
+{
+  "name": "wecansync-agent-skills",
+  "skills": [
+    "./skills/agent-handoff"
+  ]
+}
