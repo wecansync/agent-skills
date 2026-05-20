@@ -10,18 +10,33 @@ set -euo pipefail
 #   bash install.sh [--project-dir /path/to/project]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="${1:-.}"
+PROJECT_DIR=""
 INJECT_MARKER="## Agent Handoff (always active)"
 
 # Parse flags
 while [[ $# -gt 0 ]]; do
   case $1 in
     --project-dir) PROJECT_DIR="$2"; shift 2 ;;
-    --help|-h) echo "Usage: install.sh [--project-dir /path/to/project]"; exit 0 ;;
+    --help|-h)
+      echo "Agent Handoff — Universal Installer"
+      echo ""
+      echo "Usage:"
+      echo "  bash install.sh                          # install in current directory"
+      echo "  bash install.sh --project-dir /path/to   # install in specific project"
+      echo ""
+      echo "This script MUST be run from your project root (or use --project-dir)."
+      echo "Do NOT install at user scope (~/.claude/skills/) — the .ai/ context"
+      echo "files and agent config snippets must live inside the project."
+      exit 0
+      ;;
     *) shift ;;
   esac
 done
 
+# Resolve project directory
+if [[ -z "$PROJECT_DIR" ]]; then
+  PROJECT_DIR="$(pwd)"
+fi
 PROJECT_DIR="$(cd "$PROJECT_DIR" && pwd)"
 
 # Colors
@@ -34,6 +49,7 @@ NC='\033[0m'
 info()    { echo -e "${BLUE}[info]${NC} $1"; }
 success() { echo -e "${GREEN}[done]${NC} $1"; }
 warn()    { echo -e "${YELLOW}[skip]${NC} $1"; }
+err()     { echo -e "${RED}[error]${NC} $1"; }
 step()    { echo -e "${GREEN}  +${NC} $1"; }
 
 echo ""
@@ -41,6 +57,68 @@ echo "============================================"
 echo "  Agent Handoff — Universal Installer"
 echo "============================================"
 echo ""
+
+# ---------------------------------------------------------------------------
+# Pre-flight: Validate project scope
+# ---------------------------------------------------------------------------
+
+# Detect if running inside a user home config directory (wrong scope)
+case "$PROJECT_DIR" in
+  "$HOME/.claude"*|"$HOME/.config"*|"$HOME/.local"*|"$HOME/Library"*)
+    err "Detected user-scope directory: $PROJECT_DIR"
+    echo ""
+    echo "  Agent Handoff must be installed at PROJECT scope, not user scope."
+    echo "  The .ai/ context files and agent config snippets must live inside"
+    echo "  your project so all agents (Claude, Codex, Cursor, etc.) can access them."
+    echo ""
+    echo "  Run this script from your project root instead:"
+    echo ""
+    echo "    cd /path/to/your/project"
+    echo "    bash install.sh"
+    echo ""
+    echo "  Or specify the project directory:"
+    echo ""
+    echo "    bash install.sh --project-dir /path/to/your/project"
+    echo ""
+    exit 1
+    ;;
+esac
+
+# Check for signs this is actually a project root
+IS_PROJECT=false
+if [[ -d "$PROJECT_DIR/.git" ]]; then
+  IS_PROJECT=true
+elif [[ -f "$PROJECT_DIR/package.json" ]] || [[ -f "$PROJECT_DIR/composer.json" ]] || \
+     [[ -f "$PROJECT_DIR/go.mod" ]] || [[ -f "$PROJECT_DIR/Cargo.toml" ]] || \
+     [[ -f "$PROJECT_DIR/pyproject.toml" ]] || [[ -f "$PROJECT_DIR/requirements.txt" ]] || \
+     [[ -f "$PROJECT_DIR/Gemfile" ]] || [[ -f "$PROJECT_DIR/pom.xml" ]] || \
+     [[ -f "$PROJECT_DIR/build.gradle" ]] || [[ -f "$PROJECT_DIR/Makefile" ]] || \
+     [[ -f "$PROJECT_DIR/README.md" ]]; then
+  IS_PROJECT=true
+fi
+
+if [[ "$IS_PROJECT" == false ]]; then
+  warn "No project markers found (no .git, package.json, composer.json, etc.)"
+  echo ""
+  echo -e "  ${YELLOW}Are you sure this is your project root?${NC}"
+  echo "  Directory: $PROJECT_DIR"
+  echo ""
+  echo "  Agent Handoff must be installed at project scope — the .ai/ directory"
+  echo "  and agent config files (CLAUDE.md, codex.md, etc.) must live in the"
+  echo "  project so all agents can read them."
+  echo ""
+  read -r -p "  Continue anyway? [y/N] " response
+  case "$response" in
+    [yY][eE][sS]|[yY]) echo "" ;;
+    *)
+      echo ""
+      echo "  Aborted. Run from your project root:"
+      echo "    cd /path/to/your/project && bash install.sh"
+      exit 1
+      ;;
+  esac
+fi
+
 info "Project directory: $PROJECT_DIR"
 echo ""
 
@@ -266,10 +344,19 @@ echo "  Context dir:  .ai/"
 echo "  Injected into: $INJECTED agent config file(s)"
 echo ""
 echo "  Next steps:"
-echo "    1. Start any agent — it will read .ai/ files automatically"
-echo "    2. Ask it to bootstrap: \"initialize the project context\""
-echo "       or run /agent-handoff in Claude Code"
-echo "    3. The agent will scan your project and populate .ai/ files"
+echo ""
+echo "    1. Open your project in any AI agent"
+echo ""
+echo "    2. Bootstrap the project context by asking the agent:"
+echo ""
+echo "         Scan this project and populate the .ai/ context files"
+echo "         (PROJECT.md, PATHS.md, PLAN.md) following the templates"
+echo "         in .agents/skills/agent-handoff/references/templates.md"
+echo ""
+echo "       Or in Claude Code, use: /agent-handoff"
+echo ""
+echo "    3. Done — every agent will now read .ai/ on start and"
+echo "       write updates after each task automatically."
 echo ""
 echo "  To add more agents later, re-run this script."
 echo ""
