@@ -6,33 +6,35 @@ Open agent skills for multi-agent development workflows. Built for real teams th
 
 ## Quick Install
 
-### Option 1: Universal install script (recommended)
+```bash
+npx skills@latest add wecansync/agent-skills && bash .claude/skills/agent-handoff/install.sh
+```
 
-One command installs the skill for **all** agents in your project:
+That's it. The first command installs the skill via [skills.sh](https://skills.sh/wecansync/agent-skills). The second command activates it for all agents in your project.
+
+> **Why two commands?** The skills.sh CLI copies skill files to `.claude/skills/`, but skills are opt-in — agents only invoke them when they think the user's message is relevant. To make agent-handoff *always active*, the install script injects a small snippet into each agent's config file so every agent reads `.ai/` context on start and writes updates after every task. A native `postInstall` hook in plugin.json would make this a single command — [there's an open feature request](https://github.com/anthropics/claude-code/issues/9394).
+
+### What `install.sh` does
+
+1. Copies skill files to `.claude/skills/` and `.agents/skills/`
+2. Detects which agents are configured in your project
+3. Injects the always-active snippet into each agent's config file (`CLAUDE.md`, `codex.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`, `.opencode/instructions.md`)
+4. Creates the `.ai/` directory structure
+5. For agents not yet configured (Claude and Codex), creates their config file with the snippet
+
+Safe to re-run — it skips files already injected and never overwrites existing content.
+
+### Alternative: Direct install (no skills.sh)
+
+If you don't use the skills.sh ecosystem:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/install.sh | bash
 ```
 
-This will:
-1. Copy skill files to `.claude/skills/` and `.agents/skills/`
-2. Inject the always-active handoff snippet into every detected agent config file (`CLAUDE.md`, `codex.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`, `.opencode/instructions.md`)
-3. Create the `.ai/` directory structure
-4. For agents not yet configured, create their config file with the snippet
+> Note: this bypasses skills.sh, so installs won't be tracked on the leaderboard.
 
-### Option 2: Via skills.sh
-
-```bash
-npx skills@latest add wecansync/agent-skills
-```
-
-Then run the install script to inject into all agent config files:
-
-```bash
-bash .claude/skills/agent-handoff/install.sh
-```
-
-### Option 3: Manual installation
+### Alternative: Manual installation
 
 ```bash
 # Clone
@@ -40,20 +42,15 @@ git clone https://github.com/wecansync/agent-skills.git /tmp/agent-skills
 
 # Copy skill files
 mkdir -p .claude/skills/agent-handoff/references .agents/skills/agent-handoff/references
-cp /tmp/agent-skills/skills/agent-handoff/SKILL.md .claude/skills/agent-handoff/
-cp /tmp/agent-skills/skills/agent-handoff/inject.md .claude/skills/agent-handoff/
-cp /tmp/agent-skills/skills/agent-handoff/references/* .claude/skills/agent-handoff/references/
-cp /tmp/agent-skills/skills/agent-handoff/SKILL.md .agents/skills/agent-handoff/
-cp /tmp/agent-skills/skills/agent-handoff/inject.md .agents/skills/agent-handoff/
-cp /tmp/agent-skills/skills/agent-handoff/references/* .agents/skills/agent-handoff/references/
+for dir in .claude/skills/agent-handoff .agents/skills/agent-handoff; do
+  cp /tmp/agent-skills/skills/agent-handoff/SKILL.md "$dir/"
+  cp /tmp/agent-skills/skills/agent-handoff/inject.md "$dir/"
+  cp /tmp/agent-skills/skills/agent-handoff/install.sh "$dir/"
+  cp /tmp/agent-skills/skills/agent-handoff/references/* "$dir/references/"
+done
 
-# Create .ai/ directory
-mkdir -p .ai/conversations/decisions .ai/conversations/sessions
-
-# IMPORTANT: Append inject.md to each agent's config file
-cat .claude/skills/agent-handoff/inject.md >> CLAUDE.md
-cat .claude/skills/agent-handoff/inject.md >> codex.md
-# ... repeat for each agent config file in your project
+# Run the installer to inject into all agent configs and create .ai/
+bash .claude/skills/agent-handoff/install.sh
 
 # Clean up
 rm -rf /tmp/agent-skills
