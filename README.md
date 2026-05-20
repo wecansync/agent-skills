@@ -133,9 +133,114 @@ README.md
 ## After Installation
 
 1. **Start any agent** in your project — it will automatically read `.ai/` files
-2. **First run:** Ask the agent to "initialize the project context" or run `/agent-handoff` in Claude Code — it will scan your project and populate the `.ai/` files
+2. **First run:** Bootstrap the project context (see Usage below)
 3. **Every subsequent run:** The agent reads context on start and writes updates when done — no manual invocation needed
 4. **Switch agents freely** — Codex, Claude, Cursor, Gemini all share the same `.ai/` context
+
+## Usage
+
+### Bootstrapping (first run — required)
+
+The install script creates the `.ai/` directory structure, but the context files (`PROJECT.md`, `PATHS.md`, `PLAN.md`) are empty until an agent scans your project. You need to bootstrap once.
+
+#### Claude Code
+
+Use the slash command:
+
+```
+/agent-handoff
+```
+
+Or ask in natural language:
+
+```
+Initialize the project context for agent handoff
+```
+
+#### Codex (OpenAI)
+
+Ask directly — Codex reads `codex.md` which contains the handoff instructions:
+
+```
+Bootstrap the .ai/ project context. Scan the project, detect the tech stack,
+discover documentation, and populate .ai/PROJECT.md, .ai/PATHS.md, and .ai/PLAN.md
+following the templates in .agents/skills/agent-handoff/references/templates.md
+```
+
+#### Cursor / Windsurf / Copilot / Other agents
+
+Same approach — ask the agent in natural language:
+
+```
+Read the agent-handoff skill in .agents/skills/agent-handoff/SKILL.md and run
+the first-run bootstrapping process to populate the .ai/ directory
+```
+
+### Manual invocation (on-demand)
+
+The always-active snippet handles read/write automatically, but you can invoke the skill manually for specific operations:
+
+#### Refresh stale context
+
+When `.ai/` files are outdated or you want to force a refresh:
+
+**Claude Code:**
+```
+/agent-handoff
+Refresh the handoff context — HANDOFF.md may be stale
+```
+
+**Any agent:**
+```
+The .ai/conversations/HANDOFF.md file may be stale. Cross-reference it with
+git log --oneline --since="7 days ago" and update it to reflect current state.
+Also check .ai/PATHS.md for any file references that no longer exist.
+```
+
+#### Resume another agent's work
+
+When you want to continue where a different agent left off:
+
+**Claude Code:**
+```
+/agent-handoff
+Continue the last active task from HANDOFF.md
+```
+
+**Any agent:**
+```
+Read .ai/conversations/HANDOFF.md, find the last active task, read the referenced
+session file, then check the actual source files before continuing the work.
+```
+
+#### Re-scan project documentation
+
+When new docs have been added or the project structure has changed:
+
+**Claude Code:**
+```
+/agent-handoff
+Re-scan the project and update PATHS.md with any new documentation
+```
+
+**Any agent:**
+```
+Scan the project for new documentation files (check docs/, specs/, rfcs/, adrs/,
+and root *.md files). Update .ai/PATHS.md with anything not already indexed.
+```
+
+### Verifying the setup
+
+To confirm everything is working, start a new conversation with any agent and ask:
+
+```
+What do you know about this project from the handoff context?
+```
+
+The agent should respond with details from `.ai/PROJECT.md` — tech stack, architecture, active work. If it doesn't, check that:
+1. The inject snippet is present in the agent's config file (`CLAUDE.md`, `codex.md`, etc.)
+2. The `.ai/PROJECT.md` file is populated (not empty)
+3. The agent actually reads its config file (some agents need a restart)
 
 ## Re-running the installer
 
