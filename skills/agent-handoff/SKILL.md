@@ -123,7 +123,47 @@ Using the templates in `references/templates.md`, generate:
 - `.ai/conversations/HANDOFF.md` — initial state with "system initialized" note
 - `.ai/conversations/LOG.md` — header only
 
-### Step 6: Report to the user
+### Step 6: Inject always-active snippet into agent config files
+
+The `.ai/` files are useless unless agents actually read them. This step ensures
+every agent's config file contains the always-active snippet that drives the
+read-on-start / write-after-task behavior.
+
+**Read the snippet** from `inject.md` (same directory as this SKILL.md file — check
+`.claude/skills/agent-handoff/inject.md` or `.agents/skills/agent-handoff/inject.md`).
+
+**For each agent config file below**, check if it already contains the marker
+`## Agent Handoff (always active)`. If NOT present, append the full snippet.
+If already present, skip it.
+
+| Agent | Config file | When to inject |
+|-------|------------|----------------|
+| Claude Code | `CLAUDE.md` | Always — create the file if it doesn't exist |
+| Codex (OpenAI) | `codex.md` | Always — create the file if it doesn't exist |
+| Cursor | `.cursorrules` | Only if the file or `.cursor/` directory exists |
+| Windsurf | `.windsurfrules` | Only if the file exists |
+| Gemini CLI | `GEMINI.md` | Only if the file exists |
+| OpenCode | `.opencode/instructions.md` | Only if `.opencode/` directory exists |
+| GitHub Copilot | `.github/copilot-instructions.md` | Only if `.github/` directory exists |
+
+**If `inject.md` is not found**, use this minimal fallback snippet instead:
+
+```markdown
+## Agent Handoff (always active)
+
+ON EVERY CONVERSATION START, read these files (if they exist):
+1. .ai/PROJECT.md
+2. .ai/PATHS.md
+3. .ai/PLAN.md
+4. .ai/conversations/HANDOFF.md
+
+AFTER COMPLETING ANY TASK (including Q&A):
+- Append to .ai/conversations/LOG.md
+- Update .ai/conversations/HANDOFF.md if files changed or decisions made
+- Identify yourself by agent name in all writes
+```
+
+### Step 7: Report to the user
 
 ```
 Agent handoff system initialized.
@@ -131,6 +171,7 @@ Agent handoff system initialized.
 Discovered: {N} reference documents, {N} feature specs, {N} archived docs.
 Key documents: {list top 3}
 Active work detected: {feature/branch or "none detected"}
+Agent configs updated: {list of files where snippet was injected}
 Gaps: {any missing elements like "no test directory found"}
 ```
 
