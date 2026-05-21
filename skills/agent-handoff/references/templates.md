@@ -206,14 +206,16 @@ to `LOG-archive-YYYY.md` in the same directory. Keep the last 90 days in LOG.md.
 
 ---
 
-## Session file: `sessions/YYYY-MM-DD-HHMMSS-agent.md`
+## Session file: `sessions/YYYY-MM-DD/HHMMSS-agent-task-slug.md`
 
 Detailed log for one session. Only read on-demand (resume or investigation).
+Create the date directory first. Use real local system time, not model memory or
+dates copied from previous handoff entries.
 
 ```markdown
 ---
 agent: {agent-name}
-started: {YYYY-MM-DD HH:MM}
+started: {YYYY-MM-DD HH:MM TZ}
 task: {one-line task description}
 tags: [#{tag1}, #{tag2}]
 ---

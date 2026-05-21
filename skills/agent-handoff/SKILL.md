@@ -3,8 +3,9 @@ name: agent-handoff
 description: >
   Bootstrap and manage the .ai/ shared context directory for multi-agent projects.
   Use when initializing agent handoff, bootstrapping .ai/ files, refreshing stale
-  handoff state, or when the user says "bootstrap", "initialize", "set up handoff",
-  "what did the last agent do", "continue where X left off", or "resume".
+  handoff state, creating or repairing session files, or when the user says
+  "agent handoff", "bootstrap", "initialize", "set up handoff", "what did the
+  last agent do", "continue where X left off", or "resume".
 ---
 
 # Agent Handoff — Bootstrapper & Manager
@@ -25,22 +26,34 @@ For real-world examples, see `references/examples.md`.
 
 ## When This Skill Triggers
 
-- User says "bootstrap", "initialize", "set up handoff", "set up agent context"
+- User says "agent handoff", "handoff", "bootstrap", "initialize", "set up handoff", "set up agent context"
 - User says "continue", "resume", "keep going", "what was the last agent doing"
-- `.ai/PROJECT.md` does not exist (first-run detection)
+- Any core `.ai/` file is missing, empty, or still has installer placeholders:
+  `.ai/PROJECT.md`, `.ai/PATHS.md`, `.ai/PLAN.md`, `.ai/conversations/HANDOFF.md`
 - HANDOFF.md is stale (>7 days since last update)
+- User asks about session files, missing handoff writes, or another agent not
+  invoking the handoff flow
 - User explicitly invokes `/agent-handoff`
 
 ---
 
 ## First-Run Bootstrapping
 
-If `.ai/PROJECT.md` does not exist or is empty, run the full bootstrap.
+Run the full bootstrap if any required file is missing, empty, or placeholder-only:
+
+- `.ai/PROJECT.md`
+- `.ai/PATHS.md`
+- `.ai/PLAN.md`
+- `.ai/conversations/HANDOFF.md`
+
+Placeholder examples include `Last updated: —`, `(empty)`, "created (empty, will
+be populated on first agent run)", or files with only a heading.
 
 ### Step 1: Create directory structure
 
 ```bash
 mkdir -p .ai/conversations/decisions .ai/conversations/sessions
+mkdir -p ".ai/conversations/sessions/$(date +%F)"
 ```
 
 ### Step 2: Detect project type and tech stack
@@ -123,6 +136,16 @@ Using the templates in `references/templates.md`, generate:
 - `.ai/conversations/HANDOFF.md` — initial state with "system initialized" note
 - `.ai/conversations/LOG.md` — header only
 
+Use the real local system time for all dates. On Unix-like systems, get it with:
+
+```bash
+date '+%Y-%m-%d %H:%M %Z'
+date '+%Y-%m-%d/%H%M%S'
+```
+
+Never copy a date from old project docs, model memory, or previous handoff entries
+when creating new log/session records.
+
 ### Step 6: Inject always-active snippet into agent config files
 
 The `.ai/` files are useless unless agents actually read them. This step ensures
@@ -140,10 +163,10 @@ If already present, skip it.
 |-------|------------|----------------|
 | Claude Code | `CLAUDE.md` | Always — create the file if it doesn't exist |
 | Codex (OpenAI) | `codex.md` | Always — create the file if it doesn't exist |
-| Multi-agent | `AGENTS.md` | Only if the file exists |
+| Multi-agent / Antigravity | `AGENTS.md` | Always — create the file if it doesn't exist |
 | Cursor | `.cursorrules` | Only if the file or `.cursor/` directory exists |
 | Windsurf | `.windsurfrules` | Only if the file exists |
-| Gemini CLI | `GEMINI.md` | Only if the file exists |
+| Gemini CLI / older Antigravity | `GEMINI.md` | Only if the file exists or `.gemini/` exists |
 | OpenCode | `.opencode/instructions.md` | Only if `.opencode/` directory exists |
 | GitHub Copilot | `.github/copilot-instructions.md` | Only if `.github/` directory exists |
 
@@ -151,16 +174,21 @@ If already present, skip it.
 
 ```markdown
 ## Agent Handoff (always active)
+<!-- agent-handoff:v2 -->
 
-ON EVERY CONVERSATION START, read these files (if they exist):
+ON EVERY CONVERSATION START, read these files:
 1. .ai/PROJECT.md
 2. .ai/PATHS.md
 3. .ai/PLAN.md
 4. .ai/conversations/HANDOFF.md
 
+If any are missing, empty, or placeholder-only, bootstrap/repair .ai/ before work.
+Use `date '+%Y-%m-%d %H:%M %Z'` for real local timestamps.
+
 AFTER COMPLETING ANY TASK (including Q&A):
 - Append to .ai/conversations/LOG.md
 - Update .ai/conversations/HANDOFF.md if files changed or decisions made
+- Create a session file at .ai/conversations/sessions/YYYY-MM-DD/HHMMSS-agent-task-slug.md if files changed or decisions made
 - Identify yourself by agent name in all writes
 ```
 
@@ -225,6 +253,29 @@ When two agents work simultaneously, file conflicts can occur.
 1. Keep both agents' Active Work entries
 2. Merge Recent Completions chronologically
 3. Union all Key Context entries
+
+---
+
+## Session File Protocol
+
+Agents must create a session file whenever they modify files, make a decision, run
+an investigation that future agents may need, or take over another agent's active
+work.
+
+1. Read the four startup files.
+2. Get real local time from the environment.
+3. Create the date directory:
+   `mkdir -p .ai/conversations/sessions/$(date +%F)`.
+4. Use this filename:
+   `.ai/conversations/sessions/YYYY-MM-DD/HHMMSS-agent-task-slug.md`.
+5. Keep the file short and factual. Link to changed files, docs, commits, tests,
+   and blockers rather than pasting large diffs.
+6. Reference the session file from HANDOFF.md Active Work or Recent Completions.
+7. Append a matching LOG.md entry.
+
+If an agent writes LOG.md/HANDOFF.md but no session file for a file-changing task,
+the handoff is incomplete and the next agent should repair it by creating a
+catch-up session file from available evidence.
 
 ---
 

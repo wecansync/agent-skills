@@ -4,7 +4,65 @@
 
 Open agent skills for multi-agent development workflows. Built for real teams that use multiple AI agents (Claude, Codex, Gemini, Cursor, Windsurf, Copilot, OpenCode, etc.) on the same codebase.
 
-## Quick Install
+## Quick Start: Install Agent Handoff
+
+Use this from the root of the project where your agents work:
+
+```bash
+npx skills@latest add wecansync/agent-skills
+bash .claude/skills/agent-handoff/install.sh
+```
+
+Then ask any agent to bootstrap the shared context:
+
+```text
+Use agent-handoff. Scan this project and populate the .ai context files.
+```
+
+After that, work normally. Each agent reads `.ai/PROJECT.md`, `.ai/PATHS.md`,
+`.ai/PLAN.md`, and `.ai/conversations/HANDOFF.md` at the start of a session, then
+writes updates after it finishes work.
+
+### Most Common Usage Examples
+
+Install into a specific project after the skill files are already present:
+
+```bash
+bash .claude/skills/agent-handoff/install.sh --project-dir /path/to/project
+```
+
+Install without `skills.sh` into the current directory:
+
+```bash
+cd /path/to/project
+curl -fsSL https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/install.sh | bash
+```
+
+Install without `skills.sh` into a specific project:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/install.sh | bash -s -- --project-dir /path/to/project
+```
+
+Resume work from another agent:
+
+```text
+Use agent-handoff. Read the handoff files, summarize the last active task, then continue from there.
+```
+
+Repair missing or stale handoff files:
+
+```text
+Use agent-handoff. Check whether the .ai files are missing, empty, stale, or placeholder-only, then repair them.
+```
+
+Ask what happened recently:
+
+```text
+Use agent-handoff. What did the last agent do, and what should happen next?
+```
+
+## Detailed Install Notes
 
 > **Important: Project scope only.** This skill must be installed inside your project directory, not at user scope (`~/.claude/skills/`). The `.ai/` context files and agent config snippets must live in the project so that **all** agents — not just Claude — can access them. The install script will warn you if it detects a user-scope path.
 
@@ -26,9 +84,10 @@ That's it. Two commands:
 2. Detects which agents are configured in your project
 3. Injects the always-active snippet into each agent's config file (`CLAUDE.md`, `codex.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`, `.opencode/instructions.md`)
 4. Creates the `.ai/` directory structure
-5. For Claude and Codex, creates config files if they don't exist; for all others (including `AGENTS.md`), injects only if the file already exists
+5. Creates or upgrades the key project-level instruction files for Claude, Codex, and `AGENTS.md`; injects optional agent files when those tools are detected
 
-Safe to re-run — skips files already injected, never overwrites existing content.
+Safe to re-run — skips current snippets, upgrades older snippets, and never
+overwrites existing content.
 
 ### Alternative: Direct install (without skills.sh)
 
@@ -80,7 +139,7 @@ Agent Handoff fixes this with a shared `.ai/` directory in your project:
     ├── HANDOFF.md           ← What's active, what's done, what's next
     ├── LOG.md               ← Chronological changelog (all agents)
     ├── decisions/           ← Architecture decisions that outlive sessions
-    └── sessions/            ← Detailed per-session logs
+    └── sessions/YYYY-MM-DD/  ← Detailed per-session logs
 ```
 
 ### How it works (three layers)
@@ -106,10 +165,10 @@ Agent Handoff fixes this with a shared `.ai/` directory in your project:
 |-------|------------|----------------------------|
 | Claude Code | `CLAUDE.md` | Always (created if missing) |
 | Codex (OpenAI) | `codex.md` | Always (created if missing) |
-| Multi-agent | `AGENTS.md` | If file exists |
+| Multi-agent / Antigravity | `AGENTS.md` | Always (created if missing) |
 | Cursor | `.cursorrules` | If file or `.cursor/` dir exists |
 | Windsurf | `.windsurfrules` | If file exists |
-| Gemini CLI | `GEMINI.md` | If file exists |
+| Gemini CLI / older Antigravity | `GEMINI.md` | If file or `.gemini/` dir exists |
 | OpenCode | `.opencode/instructions.md` | If `.opencode/` dir exists |
 | GitHub Copilot | `.github/copilot-instructions.md` | If `.github/` dir exists |
 | Any other agent | Add manually | Append `inject.md` to its config |
@@ -131,7 +190,7 @@ The install script creates the `.ai/` directory structure, but the context files
 **Universal prompt (works with any agent):**
 
 ```
-Scan this project and populate the .ai/ context files (PROJECT.md, PATHS.md,
+Use agent-handoff. Scan this project and populate the .ai/ context files (PROJECT.md, PATHS.md,
 PLAN.md) following the templates in .agents/skills/agent-handoff/references/templates.md
 ```
 
@@ -139,11 +198,12 @@ PLAN.md) following the templates in .agents/skills/agent-handoff/references/temp
 
 | Agent | How to bootstrap |
 |-------|-----------------|
-| Claude Code | Type `/agent-handoff` or say "initialize the project context" |
+| Claude Code | Type `/agent-handoff` or paste the universal prompt |
 | Codex | Paste the universal prompt above — Codex reads `codex.md` automatically |
 | Cursor | Paste the universal prompt — Cursor reads `.cursorrules` automatically |
 | Windsurf | Paste the universal prompt — Windsurf reads `.windsurfrules` automatically |
 | Gemini CLI | Paste the universal prompt — Gemini reads `GEMINI.md` automatically |
+| Antigravity | Paste the universal prompt — Antigravity reads `AGENTS.md` in supported versions |
 | Copilot | Paste the universal prompt — Copilot reads `.github/copilot-instructions.md` automatically |
 | Any agent | Paste the universal prompt — as long as it can read/write project files |
 
@@ -239,7 +299,8 @@ Safe to re-run at any time — for example, after adding Cursor or Windsurf to a
 bash .claude/skills/agent-handoff/install.sh
 ```
 
-The script skips files already injected and never overwrites existing content.
+The script skips current snippets, upgrades older snippets, and never overwrites
+existing content.
 
 ## Contributing
 

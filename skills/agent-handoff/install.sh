@@ -12,6 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR=""
 INJECT_MARKER="## Agent Handoff (always active)"
+INJECT_VERSION_MARKER="<!-- agent-handoff:v2 -->"
 
 # Parse flags
 while [[ $# -gt 0 ]]; do
@@ -166,6 +167,7 @@ for TARGET_BASE in ".claude/skills/agent-handoff" ".agents/skills/agent-handoff"
   if [[ -n "$SKILL_SOURCE" ]]; then
     cp "$SKILL_SOURCE/SKILL.md" "$TARGET_DIR/"
     cp "$SKILL_SOURCE/inject.md" "$TARGET_DIR/"
+    cp "$SKILL_SOURCE/install.sh" "$TARGET_DIR/"
     [[ -f "$SKILL_SOURCE/references/templates.md" ]] && cp "$SKILL_SOURCE/references/templates.md" "$TARGET_DIR/references/"
     [[ -f "$SKILL_SOURCE/references/examples.md" ]] && cp "$SKILL_SOURCE/references/examples.md" "$TARGET_DIR/references/"
     step "Copied skill files to $TARGET_BASE/"
@@ -175,6 +177,8 @@ for TARGET_BASE in ".claude/skills/agent-handoff" ".agents/skills/agent-handoff"
       curl -fsSL "https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/$FILE" \
         -o "$TARGET_DIR/$FILE" 2>/dev/null || true
     done
+    curl -fsSL "https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/install.sh" \
+      -o "$TARGET_DIR/install.sh" 2>/dev/null || true
     for FILE in templates.md examples.md; do
       curl -fsSL "https://raw.githubusercontent.com/wecansync/agent-skills/main/skills/agent-handoff/references/$FILE" \
         -o "$TARGET_DIR/references/$FILE" 2>/dev/null || true
@@ -192,8 +196,14 @@ inject_into_file() {
   local label="$2"
 
   if [[ -f "$file" ]]; then
-    if grep -qF "$INJECT_MARKER" "$file" 2>/dev/null; then
+    if grep -qF "$INJECT_VERSION_MARKER" "$file" 2>/dev/null; then
       warn "$label — already injected"
+      return
+    fi
+    if grep -qF "$INJECT_MARKER" "$file" 2>/dev/null; then
+      echo "" >> "$file"
+      echo "$INJECT_CONTENT" >> "$file"
+      step "$label — handoff snippet upgraded"
       return
     fi
     echo "" >> "$file"
@@ -223,11 +233,9 @@ fi
 inject_into_file "$PROJECT_DIR/codex.md" "codex.md (Codex)"
 INJECTED=$((INJECTED + 1))
 
-# AGENTS.md (multi-agent — used by Codex, Specify, and other multi-agent tools)
-if [[ -f "$PROJECT_DIR/AGENTS.md" ]]; then
-  inject_into_file "$PROJECT_DIR/AGENTS.md" "AGENTS.md (multi-agent)"
-  INJECTED=$((INJECTED + 1))
-fi
+# AGENTS.md (multi-agent — used by Codex, Antigravity, Specify, and other tools)
+inject_into_file "$PROJECT_DIR/AGENTS.md" "AGENTS.md (multi-agent / Antigravity)"
+INJECTED=$((INJECTED + 1))
 
 # Cursor
 if [[ -f "$PROJECT_DIR/.cursorrules" ]] || [[ -d "$PROJECT_DIR/.cursor" ]]; then
@@ -241,9 +249,9 @@ if [[ -f "$PROJECT_DIR/.windsurfrules" ]]; then
   INJECTED=$((INJECTED + 1))
 fi
 
-# Gemini CLI
-if [[ -f "$PROJECT_DIR/GEMINI.md" ]]; then
-  inject_into_file "$PROJECT_DIR/GEMINI.md" "GEMINI.md (Gemini CLI)"
+# Gemini CLI / older Antigravity
+if [[ -f "$PROJECT_DIR/GEMINI.md" ]] || [[ -d "$PROJECT_DIR/.gemini" ]]; then
+  inject_into_file "$PROJECT_DIR/GEMINI.md" "GEMINI.md (Gemini CLI / older Antigravity)"
   INJECTED=$((INJECTED + 1))
 fi
 
@@ -269,11 +277,12 @@ echo ""
 info "Creating .ai/ directory structure..."
 
 mkdir -p "$PROJECT_DIR/.ai/conversations/decisions" \
-         "$PROJECT_DIR/.ai/conversations/sessions"
+         "$PROJECT_DIR/.ai/conversations/sessions" \
+         "$PROJECT_DIR/.ai/conversations/sessions/$(date +%F)"
 
 for FILE in PROJECT.md PATHS.md PLAN.md; do
   if [[ ! -f "$PROJECT_DIR/.ai/$FILE" ]]; then
-    step ".ai/$FILE — created (empty, will be populated on first agent run)"
+    step ".ai/$FILE — created (placeholder, bootstrap required on first agent run)"
     touch "$PROJECT_DIR/.ai/$FILE"
   else
     warn ".ai/$FILE — already exists"
@@ -303,7 +312,11 @@ else
 fi
 
 if [[ ! -f "$PROJECT_DIR/.ai/conversations/LOG.md" ]]; then
-  echo "# Agent Activity Log" > "$PROJECT_DIR/.ai/conversations/LOG.md"
+  {
+    echo "# Agent Activity Log"
+    echo ""
+    echo "<!-- agent-handoff: append-only; use real local time from the environment -->"
+  } > "$PROJECT_DIR/.ai/conversations/LOG.md"
   step ".ai/conversations/LOG.md — created"
 else
   warn ".ai/conversations/LOG.md — already exists"
