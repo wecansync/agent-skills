@@ -82,10 +82,10 @@ overwrite your existing project instructions.
 
 ### 1. Bootstrap The Project
 
-After installation, ask any agent:
+After installation, bootstrap once. Ask any agent:
 
 ```text
-Use agent-handoff. Scan this project and populate the .ai context files.
+Scan this project and populate the .ai context files.
 ```
 
 Claude Code shortcut:
@@ -103,21 +103,28 @@ Do this once per project. The agent scans your repo and fills:
 
 ### 2. Work Normally
 
-After bootstrap, start any agent and work as usual.
+After bootstrap, start any agent and work as usual. You do not need to mention
+`agent-handoff` in every prompt.
 
-Each agent is instructed to:
+The installed always-active snippet tells each agent to:
 
-- Read `.ai/PROJECT.md`, `.ai/PATHS.md`, `.ai/PLAN.md`, and `.ai/conversations/HANDOFF.md` before work
-- Append to `.ai/conversations/LOG.md` after work
-- Update `.ai/conversations/HANDOFF.md` when work changes
-- Create session files in `.ai/conversations/sessions/YYYY-MM-DD/`
+- Read `.ai/PROJECT.md`, `.ai/PATHS.md`, `.ai/PLAN.md`, and `.ai/conversations/HANDOFF.md` before work.
+- Append to `.ai/conversations/LOG.md` after work.
+- Update `.ai/conversations/HANDOFF.md` when work changes.
+- Create session files in `.ai/conversations/sessions/YYYY-MM-DD/`.
+
+Example normal prompt:
+
+```text
+Continue implementing the dashboard filters and run the relevant tests.
+```
 
 ### 3. Resume Another Agent's Work
 
 Ask:
 
 ```text
-Use agent-handoff. Read the handoff files, summarize the last active task, then continue from there.
+Read the handoff files, summarize the last active task, then continue from there.
 ```
 
 ### 4. Check What Happened Recently
@@ -125,7 +132,7 @@ Use agent-handoff. Read the handoff files, summarize the last active task, then 
 Ask:
 
 ```text
-Use agent-handoff. What did the last agent do, and what should happen next?
+What did the last agent do, and what should happen next?
 ```
 
 ### 5. Repair Or Refresh Context
@@ -133,7 +140,7 @@ Use agent-handoff. What did the last agent do, and what should happen next?
 Ask:
 
 ```text
-Use agent-handoff. Check whether the .ai files are missing, empty, stale, or placeholder-only, then repair them.
+Check whether the .ai files are missing, empty, stale, or placeholder-only, then repair them.
 ```
 
 ## Example Workflow
@@ -147,13 +154,13 @@ bash .claude/skills/agent-handoff/install.sh
 Then in Claude, Codex, OpenCode, Antigravity, or another agent:
 
 ```text
-Use agent-handoff. Scan this project and populate the .ai context files.
+Scan this project and populate the .ai context files.
 ```
 
 Later, in another agent:
 
 ```text
-Use agent-handoff. Read the handoff files and continue the current task.
+Read the handoff files and continue the current task.
 ```
 
 ## Verify Setup
