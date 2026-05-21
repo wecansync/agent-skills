@@ -117,6 +117,14 @@ Optional safety nudge: if an agent does not reliably load project instructions,
 or you want to be extra sure the handoff context is read and updated, add a short
 phrase like `use handoff`, `check handoff`, or `use agent-handoff` to your prompt.
 
+If an agent reads handoff but forgets to update it, use the stronger force
+pattern below. This tells the agent to read at the start and write before it
+finishes:
+
+```text
+Use handoff. Read the handoff context before starting. Before your final response, update LOG.md, HANDOFF.md, and a session file if you changed files or made decisions.
+```
+
 Example normal prompt:
 
 ```text
@@ -127,6 +135,12 @@ Example with the optional nudge:
 
 ```text
 Use handoff, then continue implementing the dashboard filters and run the relevant tests.
+```
+
+Example with forced read/write:
+
+```text
+Use handoff. Read the handoff context first. Continue implementing the dashboard filters and run the relevant tests. Before your final response, update LOG.md, HANDOFF.md, and a session file for this work.
 ```
 
 ### 3. Resume Another Agent's Work

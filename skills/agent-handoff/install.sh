@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR=""
 INJECT_MARKER="## Agent Handoff (always active)"
-INJECT_VERSION_MARKER="<!-- agent-handoff:v2 -->"
+INJECT_VERSION_MARKER="<!-- agent-handoff:v3 -->"
 
 # Parse flags
 while [[ $# -gt 0 ]]; do

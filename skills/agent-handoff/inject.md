@@ -1,5 +1,5 @@
 ## Agent Handoff (always active)
-<!-- agent-handoff:v2 -->
+<!-- agent-handoff:v3 -->
 
 You are part of a multi-agent workflow. Multiple AI agents work on this project
 at different times. Each agent has isolated conversation history. A shared `.ai/`
@@ -22,14 +22,18 @@ environment (`date '+%Y-%m-%d %H:%M %Z'` and `date '+%Y-%m-%d/%H%M%S'` on Unix-l
 systems). Do not infer the date from model memory, old docs, or previous handoff
 entries.
 
-**AFTER COMPLETING ANY TASK** (including answering questions):
+**BEFORE YOU FINISH EVERY RESPONSE**, complete the handoff write-back. Do not stop
+after only reading handoff context.
 
-- **Always:** Append to `.ai/conversations/LOG.md`
-- **If files changed or decisions made:** Update `.ai/conversations/HANDOFF.md`
-  and create a session file in `.ai/conversations/sessions/YYYY-MM-DD/`
-- **If architecture/design decision:** Write to `.ai/conversations/decisions/`
-- **If project structure changed:** Update `.ai/PATHS.md`
-- **If plan status changed:** Update `.ai/PLAN.md`
+- **Always:** Append to `.ai/conversations/LOG.md`.
+- **Always for file changes, tests, investigations, plans, or decisions:** update
+  `.ai/conversations/HANDOFF.md` and create a session file in
+  `.ai/conversations/sessions/YYYY-MM-DD/`.
+- **If architecture/design decision:** Write to `.ai/conversations/decisions/`.
+- **If project structure changed:** Update `.ai/PATHS.md`.
+- **If plan status changed:** Update `.ai/PLAN.md`.
+- **In your final response:** mention that handoff was updated, or explain why no
+  handoff write was needed.
 
 Session filenames must be unique and sortable:
 `.ai/conversations/sessions/YYYY-MM-DD/HHMMSS-agent-task-slug.md`.

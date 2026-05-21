@@ -174,7 +174,7 @@ If already present, skip it.
 
 ```markdown
 ## Agent Handoff (always active)
-<!-- agent-handoff:v2 -->
+<!-- agent-handoff:v3 -->
 
 ON EVERY CONVERSATION START, read these files:
 1. .ai/PROJECT.md
@@ -185,10 +185,11 @@ ON EVERY CONVERSATION START, read these files:
 If any are missing, empty, or placeholder-only, bootstrap/repair .ai/ before work.
 Use `date '+%Y-%m-%d %H:%M %Z'` for real local timestamps.
 
-AFTER COMPLETING ANY TASK (including Q&A):
+BEFORE YOU FINISH EVERY RESPONSE, complete the handoff write-back:
 - Append to .ai/conversations/LOG.md
 - Update .ai/conversations/HANDOFF.md if files changed or decisions made
 - Create a session file at .ai/conversations/sessions/YYYY-MM-DD/HHMMSS-agent-task-slug.md if files changed or decisions made
+- In your final response, mention that handoff was updated or explain why no handoff write was needed
 - Identify yourself by agent name in all writes
 ```
 
@@ -272,6 +273,8 @@ work.
    and blockers rather than pasting large diffs.
 6. Reference the session file from HANDOFF.md Active Work or Recent Completions.
 7. Append a matching LOG.md entry.
+8. In the final response to the user, say that handoff was updated. If no write
+   was needed, say why.
 
 If an agent writes LOG.md/HANDOFF.md but no session file for a file-changing task,
 the handoff is incomplete and the next agent should repair it by creating a
