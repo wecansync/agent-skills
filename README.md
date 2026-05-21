@@ -113,10 +113,20 @@ The installed always-active snippet tells each agent to:
 - Update `.ai/conversations/HANDOFF.md` when work changes.
 - Create session files in `.ai/conversations/sessions/YYYY-MM-DD/`.
 
+Optional safety nudge: if an agent does not reliably load project instructions,
+or you want to be extra sure the handoff context is read and updated, add a short
+phrase like `use handoff`, `check handoff`, or `use agent-handoff` to your prompt.
+
 Example normal prompt:
 
 ```text
 Continue implementing the dashboard filters and run the relevant tests.
+```
+
+Example with the optional nudge:
+
+```text
+Use handoff, then continue implementing the dashboard filters and run the relevant tests.
 ```
 
 ### 3. Resume Another Agent's Work
