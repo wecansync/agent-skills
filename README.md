@@ -20,14 +20,27 @@ It helps agents answer:
 
 ## Installation
 
-Install from your project root:
+Run these steps from your project root.
+
+### Step 1: Download The Skill
 
 ```bash
 npx skills@latest add wecansync/agent-skills
+```
+
+This downloads the skill into:
+
+```text
+.claude/skills/agent-handoff/
+```
+
+### Step 2: Install It Into The Project
+
+```bash
 bash .claude/skills/agent-handoff/install.sh
 ```
 
-That creates:
+This creates the shared handoff files:
 
 ```text
 .ai/
@@ -41,7 +54,8 @@ That creates:
     └── sessions/
 ```
 
-It also injects handoff instructions into supported agent config files:
+It also injects the always-active handoff instructions into supported agent
+config files:
 
 - `CLAUDE.md`
 - `codex.md`
@@ -51,6 +65,32 @@ It also injects handoff instructions into supported agent config files:
 - `.windsurfrules`
 - `GEMINI.md`
 - `.github/copilot-instructions.md`
+
+The installer is safe to re-run. It skips current snippets, upgrades old
+snippets, and does not overwrite your existing project instructions.
+
+### Step 3: Bootstrap Context Once
+
+In Claude Code, run:
+
+```text
+/agent-handoff
+```
+
+Or ask any agent:
+
+```text
+Scan this project and populate the .ai context files.
+```
+
+This fills:
+
+- `.ai/PROJECT.md`
+- `.ai/PATHS.md`
+- `.ai/PLAN.md`
+- `.ai/conversations/HANDOFF.md`
+
+After this, agents should read and update handoff automatically.
 
 ### Direct Install
 
@@ -75,33 +115,12 @@ Safe to run again after adding a new agent or upgrading the skill:
 bash .claude/skills/agent-handoff/install.sh
 ```
 
-The installer skips current snippets, upgrades old snippets, and does not
-overwrite your existing project instructions.
+If `CLAUDE.md`, `AGENTS.md`, or `codex.md` are missing, re-run the installer from
+the project root. The installer creates those files when needed.
 
 ## Usage
 
-### 1. Bootstrap The Project
-
-After installation, bootstrap once. Ask any agent:
-
-```text
-Scan this project and populate the .ai context files.
-```
-
-Claude Code shortcut:
-
-```text
-/agent-handoff
-```
-
-Do this once per project. The agent scans your repo and fills:
-
-- `.ai/PROJECT.md` — project overview, stack, conventions
-- `.ai/PATHS.md` — important files and docs
-- `.ai/PLAN.md` — current work and task status
-- `.ai/conversations/HANDOFF.md` — latest agent handoff
-
-### 2. Work Normally
+### 1. Work Normally
 
 After bootstrap, start any agent and work as usual. You do not need to mention
 `agent-handoff` in every prompt.
@@ -143,7 +162,7 @@ Example with forced read/write:
 Use handoff. Read the handoff context first. Continue implementing the dashboard filters and run the relevant tests. Before your final response, update LOG.md, HANDOFF.md, and a session file for this work.
 ```
 
-### 3. Resume Another Agent's Work
+### 2. Resume Another Agent's Work
 
 Ask:
 
@@ -151,7 +170,7 @@ Ask:
 Read the handoff files, summarize the last active task, then continue from there.
 ```
 
-### 4. Check What Happened Recently
+### 3. Check What Happened Recently
 
 Ask:
 
@@ -159,7 +178,7 @@ Ask:
 What did the last agent do, and what should happen next?
 ```
 
-### 5. Repair Or Refresh Context
+### 4. Repair Or Refresh Context
 
 Ask:
 
@@ -175,10 +194,10 @@ npx skills@latest add wecansync/agent-skills
 bash .claude/skills/agent-handoff/install.sh
 ```
 
-Then in Claude, Codex, OpenCode, Antigravity, or another agent:
+Then in Claude Code:
 
 ```text
-Scan this project and populate the .ai context files.
+/agent-handoff
 ```
 
 Later, in another agent:

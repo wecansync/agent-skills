@@ -53,6 +53,27 @@ warn()    { echo -e "${YELLOW}[skip]${NC} $1"; }
 err()     { echo -e "${RED}[error]${NC} $1"; }
 step()    { echo -e "${GREEN}  +${NC} $1"; }
 
+copy_if_different() {
+  local source="$1"
+  local target="$2"
+
+  if [[ ! -f "$source" ]]; then
+    return
+  fi
+
+  mkdir -p "$(dirname "$target")"
+
+  if [[ -f "$target" ]] && [[ "$(cd "$(dirname "$source")" && pwd)/$(basename "$source")" == "$(cd "$(dirname "$target")" && pwd)/$(basename "$target")" ]]; then
+    return
+  fi
+
+  if [[ -f "$target" ]] && cmp -s "$source" "$target"; then
+    return
+  fi
+
+  cp "$source" "$target"
+}
+
 echo ""
 echo "============================================"
 echo "  Agent Handoff — Universal Installer"
@@ -165,12 +186,12 @@ for TARGET_BASE in ".claude/skills/agent-handoff" ".agents/skills/agent-handoff"
   mkdir -p "$TARGET_DIR/references"
 
   if [[ -n "$SKILL_SOURCE" ]]; then
-    cp "$SKILL_SOURCE/SKILL.md" "$TARGET_DIR/"
-    cp "$SKILL_SOURCE/inject.md" "$TARGET_DIR/"
-    cp "$SKILL_SOURCE/install.sh" "$TARGET_DIR/"
-    [[ -f "$SKILL_SOURCE/references/templates.md" ]] && cp "$SKILL_SOURCE/references/templates.md" "$TARGET_DIR/references/"
-    [[ -f "$SKILL_SOURCE/references/examples.md" ]] && cp "$SKILL_SOURCE/references/examples.md" "$TARGET_DIR/references/"
-    step "Copied skill files to $TARGET_BASE/"
+    copy_if_different "$SKILL_SOURCE/SKILL.md" "$TARGET_DIR/SKILL.md"
+    copy_if_different "$SKILL_SOURCE/inject.md" "$TARGET_DIR/inject.md"
+    copy_if_different "$SKILL_SOURCE/install.sh" "$TARGET_DIR/install.sh"
+    copy_if_different "$SKILL_SOURCE/references/templates.md" "$TARGET_DIR/references/templates.md"
+    copy_if_different "$SKILL_SOURCE/references/examples.md" "$TARGET_DIR/references/examples.md"
+    step "Installed skill files in $TARGET_BASE/"
   else
     # Download from GitHub
     for FILE in SKILL.md inject.md; do
@@ -353,15 +374,14 @@ echo "  Injected into: $INJECTED agent config file(s)"
 echo ""
 echo "  Next steps:"
 echo ""
-echo "    1. Open your project in any AI agent"
+echo "    1. Open Claude Code in this project"
 echo ""
-echo "    2. Bootstrap the project context by asking the agent:"
+echo "    2. Run:"
 echo ""
-echo "         Scan this project and populate the .ai/ context files"
-echo "         (PROJECT.md, PATHS.md, PLAN.md) following the templates"
-echo "         in .agents/skills/agent-handoff/references/templates.md"
+echo "         /agent-handoff"
 echo ""
-echo "       Or in Claude Code, use: /agent-handoff"
+echo "       Or ask any agent:"
+echo "         Scan this project and populate the .ai context files."
 echo ""
 echo "    3. Done — every agent will now read .ai/ on start and"
 echo "       write updates after each task automatically."
